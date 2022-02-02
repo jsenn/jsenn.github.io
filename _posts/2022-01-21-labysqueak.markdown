@@ -79,8 +79,8 @@ of the labyrinth taken from above:
 
 ![Collingwood Labyrinth](/assets/images/collingwood-labyrinth.jpg)
 
-A local boy who was there told me that if you clap your hands in the center of the
-labyrinth you'll hear a squeak. I didn't believe him, but I didn't disbelieve enough
+Some kids there told me that if you clap your hands in the center of the
+labyrinth you'll hear a squeak. I didn't believe them, but I didn't disbelieve enough
 not to try it. Sure enough, when I clapped I heard a short, faint squeak sound.
 
 What could cause this squeak? The simplest mechanism I can think of is this.
