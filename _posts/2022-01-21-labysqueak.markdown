@@ -5,7 +5,37 @@ mathjax: true
 ---
 
 <script type="text/javascript">
-window.ctx = new (window.AudioContext || window.webkitAudioContext)();
+window.DEFAULT_LABY = {
+	d0: 1,
+	h: 1.75,
+	b: 0.09,
+	kmax: 100
+};
+window.SPEED_OF_SOUND = 343;
+
+window.canvasResizer = function canvasResizer(canvas, aspect, maxHeight) {
+	function resize() {
+		canvas.height = Math.min(maxHeight, window.innerHeight);
+		canvas.width = Math.min(window.innerWidth*0.5, canvas.height*aspect);
+	}
+
+	return resize;
+};
+
+window.amplitudeDecay = function amplitudeDecay(initial, dist, quarterDist) {
+	const denom = (dist/quarterDist + 1.0) * (dist/quarterDist + 1.0);
+	return initial / denom;
+}
+
+window.drawRoundRect = function drawRoundRect(ctx, x, y, width, height, cornerRadius) {
+	ctx.moveTo(x + cornerRadius, y);
+	ctx.arcTo(x + width, y, x+width, y+height, cornerRadius);
+	ctx.arcTo(x + width, y + height, x, y+height, cornerRadius);
+	ctx.arcTo(x, y + height, x, y, cornerRadius);
+	ctx.arcTo(x, y, x + width, y, cornerRadius);
+};
+
+window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 window.togglePlay = function togglePlay(button, playfunc) {
 	if (button.osc) {
 		button.textContent = "Play";
@@ -14,22 +44,15 @@ window.togglePlay = function togglePlay(button, playfunc) {
 		button.osc = null;
 	} else {
 		button.textContent = "Stop";
-		button.osc = ctx.createOscillator();
-		button.osc.connect(ctx.destination);
+		button.osc = audioCtx.createOscillator();
+		button.osc.connect(audioCtx.destination);
 		playfunc(button.osc);
 	}
 };
 
-window.DEFAULT_LABY = {
-	d0: 1,
-	h: 1.75,
-	b: 0.09,
-	kmax: 100
-};
-
 window.playSin = function playSin(osc, freq) {
 	osc.type = "sine";
-	osc.frequency.setValueAtTime(freq, window.ctx.currentTime);
+	osc.frequency.setValueAtTime(freq, window.audioCtx.currentTime);
 	osc.start();
 };
 
@@ -39,9 +62,9 @@ window.playSqueak = function playSqueak(osc, laby) {
 	const freqs = window.getSqueakFreqs(laby, 100);
 	const duration = window.getSqueakDuration(laby);
 	const ramp = 0.1;
-	osc.frequency.setValueCurveAtTime(freqs, window.ctx.currentTime + ramp, duration);
-	osc.start(window.ctx.currentTime + ramp);
-	osc.stop(window.ctx.currentTime + ramp + duration);
+	osc.frequency.setValueCurveAtTime(freqs, window.audioCtx.currentTime + ramp, duration);
+	osc.start(window.audioCtx.currentTime + ramp);
+	osc.stop(window.audioCtx.currentTime + ramp + duration);
 };
 
 window.getSqueakFreqs = function getSqueakFreqs(laby, N) {
@@ -50,12 +73,10 @@ window.getSqueakFreqs = function getSqueakFreqs(laby, N) {
 	const b = laby.b;
 	const kmax = laby.kmax;
 
-	const c = 343;
-
 	D_p = (k) => d0 + b*k;
-	F = (t) => Math.hypot(c*t, h) / (2*b*t);
-	const t0 = D_p(0) / c;
-	const tmax = D_p(kmax) / c;
+	F = (t) => Math.hypot(window.SPEED_OF_SOUND*t, h) / (2*b*t);
+	const t0 = D_p(0) / window.SPEED_OF_SOUND;
+	const tmax = D_p(kmax) / window.SPEED_OF_SOUND;
 	freqs = new Float32Array(N);
 	for (let i = 0; i < N; ++i) {
 		const t = t0 + i/(N-1) * (tmax - t0);
@@ -68,9 +89,256 @@ window.getSqueakFreqs = function getSqueakFreqs(laby, N) {
 window.getSqueakDuration = function getSqueakDuration(laby) {
 	const b = laby.b;
 	const kmax = laby.kmax;
-	const c = 343;
 
-	return kmax * 2 * b / c;
+	return kmax * 2 * b / window.SPEED_OF_SOUND;
+};
+
+window.drawLabyrinth2d = function drawLabyrinth2d(ctx, width, height, laby) {
+	const centerX = width/2;
+	const centerY = height/2;
+	ctx.strokeStyle = 'black';
+	for (let k = 0; k <= laby.kmax; ++k) {
+		ctx.beginPath();
+		ctx.arc(centerX, centerY, laby.d0 + laby.b * k, 0, 2*Math.PI);
+		ctx.stroke();
+	}
+};
+
+window.drawSoundWave2d = function drawSoundWave2d(ctx, wave, angle_start, angle_end) {
+	ctx.strokeStyle = `rgba(0, 0, 0, ${wave.amplitude})`;
+	ctx.beginPath();
+	ctx.arc(wave.originX, wave.originY, wave.dist, angle_start, angle_end);
+	ctx.stroke();
+};
+
+window.drawClap = function drawClap(ctx, originX, originY, size, alpha) {
+	ctx.font = `${size}px`;
+	ctx.textAlign = 'center';
+	ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+	ctx.fillText("\u{1f44f}", originX, originY);
+};
+
+window.drawSim2d = function drawSim2d(ctx, width, height, sim) {
+	ctx.clearRect(0, 0, width, height);
+
+	const centerX = width/2;
+	const centerY = height/2;
+
+	const clap_duration = 2;
+	const clap_alpha = 1 - Math.max(0, Math.min(1, sim.t/clap_duration));
+	const clap_size = sim.laby.d0/6;
+	window.drawClap(ctx, centerX, centerY, clap_size, clap_alpha);
+
+	window.drawLabyrinth2d(ctx, width, height, sim.laby);
+
+	window.drawSoundWave2d(ctx, sim.clap, 0, 2*Math.PI);
+	for (let echo of sim.echoes) {
+		const angle_start = Math.PI/2 + Math.atan2(echo.originY - centerY, echo.originX - centerX);
+		const angle_end = angle_start + Math.PI;
+		window.drawSoundWave2d(ctx, echo, angle_start, angle_end);
+	}
+};
+
+window.stepSim2d = function stepSim2d(sim, dt) {
+	const dmax = sim.laby.d0 + sim.laby.b * sim.laby.kmax;
+	const new_echoes = [];
+	for (let echo of sim.echoes) {
+		echo.dist += sim.speedScale*window.SPEED_OF_SOUND * dt;
+		echo.amplitude = window.amplitudeDecay(echo.initialAmplitude, echo.dist, dmax);
+		if (echo.dist <= Math.hypot(echo.originX - sim.clap.originX, echo.originY - sim.clap.originY)) {
+			new_echoes.push(echo);
+		}
+	}
+	const old_clap_dist = sim.clap.dist;
+	sim.clap.dist += sim.speedScale*window.SPEED_OF_SOUND * dt;
+	sim.clap.amplitude = window.amplitudeDecay(sim.clap.initialAmplitude, sim.clap.dist, dmax);
+
+	const k_old = (old_clap_dist - sim.laby.d0)/sim.laby.b;
+	const k_new = (sim.clap.dist - sim.laby.d0)/sim.laby.b;
+	const row_crossed = Math.floor(k_new);
+	if (row_crossed <= sim.laby.kmax && Math.floor(k_old) !== Math.floor(k_new)) {
+		const k_elapsed = k_new - row_crossed;
+		const d_elapsed = sim.laby.b * k_elapsed;
+		const dist = sim.laby.d0 + sim.laby.b * row_crossed;
+		const num_echoes = 10;
+		for (let i = 0; i < num_echoes; ++i) {
+			const angle = (i/num_echoes) * 2 * Math.PI
+			const x = sim.clap.originX + dist * Math.cos(angle);
+			const y = sim.clap.originY + dist * Math.sin(angle);
+			new_echoes.push({
+				dist: d_elapsed,
+				originX: x,
+				originY: y,
+				initialAmplitude: sim.clap.amplitude,
+				amplitude: sim.clap.amplitude
+			});
+		}
+	}
+	sim.echoes = new_echoes;
+	sim.t += dt;
+};
+
+window.playLaby2d = function playLaby2d(canvas, checkCancel, onDone) {
+	const ctx = canvas.getContext('2d');
+	const width = canvas.width;
+	const height = canvas.height;
+
+	const padding = 10;
+	const size = Math.min(width, height)/2 - padding;
+	const d0 = 0.2 * size;
+	const kmax = 4;
+	const b = (size - d0) / kmax
+	const sim = {
+		laby: { d0: d0, b: b, kmax: kmax },
+		speedScale: size/1000,
+		t: 0,
+		clap: {originX: width/2, originY: height/2, dist: 0, initialAmplitude: 1, amplitude: 1},
+		echoes: []
+	};
+	let prevTime = null;
+	function go(currTime) {
+		if (checkCancel()) {
+			ctx.clearRect(0, 0, width, height);
+			return;
+		} else if (sim.echoes.length === 0 && sim.clap.dist > d0 + b*kmax) {
+			onDone();
+			return;
+		}
+		if (prevTime !== null) {
+			const dt = (currTime - prevTime)/1000.0;
+			window.stepSim2d(sim, dt);
+		}
+		window.drawSim2d(ctx, width, height, sim);
+		prevTime = currTime;
+		window.requestAnimationFrame(go);
+	}
+	window.requestAnimationFrame(go);
+};
+
+window.drawLabyrinth3d = function drawLabyrinth3d(ctx, width, height, laby) {
+	const centerX = width/2;
+	const centerY = height;
+	ctx.fillStyle = 'gray';
+	ctx.beginPath();
+	for (let k = 0; k <= laby.kmax; ++k) {
+		const dist = laby.d0 + laby.b * k;
+		const brickHeight = 10;
+		const cornerRadius = 2;
+		drawRoundRect(ctx, centerX - dist - laby.b, centerY - brickHeight, laby.b, brickHeight, cornerRadius);
+		drawRoundRect(ctx, centerX + dist, centerY - brickHeight, laby.b, brickHeight, cornerRadius);
+	}
+	ctx.fill();
+};
+
+window.drawSoundWave3d = function drawSoundWave3d(ctx, wave, angle_start, angle_end) {
+	ctx.strokeStyle = `rgba(0, 0, 0, ${wave.amplitude})`;
+	ctx.beginPath();
+	ctx.arc(wave.originX, wave.originY, wave.dist, angle_start, angle_end);
+	ctx.stroke();
+};
+
+window.drawClap = function drawClap(ctx, originX, originY, size, alpha) {
+	ctx.font = `${size}px`;
+	ctx.textAlign = 'center';
+	ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+	ctx.fillText("\u{1f44f}", originX, originY);
+};
+
+window.drawSim3d = function drawSim3d(ctx, width, height, sim) {
+	ctx.clearRect(0, 0, width, height);
+
+	const centerX = width/2;
+	const centerY = height/2;
+
+	const clap_duration = 2;
+	const clap_alpha = 1 - Math.max(0, Math.min(1, sim.t/clap_duration));
+	const clap_size = sim.laby.d0/6;
+	window.drawClap(ctx, centerX, centerY, clap_size, clap_alpha);
+
+	window.drawLabyrinth3d(ctx, width, height, sim.laby);
+
+	window.drawSoundWave3d(ctx, sim.clap, 0, 2*Math.PI);
+	for (let echo of sim.echoes) {
+		const angle_start = Math.PI/2 + Math.atan2(echo.originY - centerY, echo.originX - centerX);
+		const angle_end = angle_start + Math.PI;
+		window.drawSoundWave3d(ctx, echo, angle_start, angle_end);
+	}
+};
+
+window.stepSim3d = function stepSim3d(sim, dt) {
+	const dmax = sim.laby.d0 + sim.laby.b * sim.laby.kmax;
+	const new_echoes = [];
+	for (let echo of sim.echoes) {
+		echo.dist += sim.speedScale*window.SPEED_OF_SOUND * dt;
+		echo.amplitude = window.amplitudeDecay(echo.initialAmplitude, echo.dist, dmax);
+		if (echo.dist <= Math.hypot(echo.originX - sim.clap.originX, echo.originY - sim.clap.originY)) {
+			new_echoes.push(echo);
+		}
+	}
+	const old_clap_dist = sim.clap.dist;
+	sim.clap.dist += sim.speedScale*window.SPEED_OF_SOUND * dt;
+	sim.clap.amplitude = window.amplitudeDecay(sim.clap.initialAmplitude, sim.clap.dist, dmax);
+
+	const k_old = (old_clap_dist - sim.laby.d0)/sim.laby.b;
+	const k_new = (sim.clap.dist - sim.laby.d0)/sim.laby.b;
+	const row_crossed = Math.floor(k_new);
+	if (row_crossed <= sim.laby.kmax && Math.floor(k_old) !== Math.floor(k_new)) {
+		const k_elapsed = k_new - row_crossed;
+		const d_elapsed = sim.laby.b * k_elapsed;
+		const dist = sim.laby.d0 + sim.laby.b * row_crossed;
+		const num_echoes = 10;
+		for (let i = 0; i < num_echoes; ++i) {
+			const angle = (i/num_echoes) * 2 * Math.PI
+			const x = sim.clap.originX + dist * Math.cos(angle);
+			const y = sim.clap.originY + dist * Math.sin(angle);
+			new_echoes.push({
+				dist: d_elapsed,
+				originX: x,
+				originY: y,
+				initialAmplitude: sim.clap.amplitude,
+				amplitude: sim.clap.amplitude
+			});
+		}
+	}
+	sim.echoes = new_echoes;
+	sim.t += dt;
+};
+
+window.playLaby3d = function playLaby3d(canvas, checkCancel, onDone) {
+	const ctx = canvas.getContext('2d');
+	const width = canvas.width;
+	const height = canvas.height;
+
+	const padding = 10;
+	const size = Math.min(width, height)/2 - padding;
+	const d0 = 0.2 * size;
+	const kmax = 4;
+	const b = (size - d0) / kmax
+	const sim = {
+		laby: { d0: d0, b: b, kmax: kmax },
+		speedScale: size/1000,
+		t: 0,
+		clap: {originX: width/2, originY: height/2, dist: 0, initialAmplitude: 1, amplitude: 1},
+		echoes: []
+	};
+	let prevTime = null;
+	function go(currTime) {
+		if (checkCancel()) {
+			ctx.clearRect(0, 0, width, height);
+			return;
+		} else if (sim.echoes.length === 0 && sim.clap.dist > d0 + b*kmax) {
+			onDone();
+			return;
+		}
+		if (prevTime !== null) {
+			const dt = (currTime - prevTime)/1000.0;
+			window.stepSim3d(sim, dt);
+		}
+		window.drawSim3d(ctx, width, height, sim);
+		prevTime = currTime;
+		window.requestAnimationFrame(go);
+	}
+	window.requestAnimationFrame(go);
 };
 </script>
 
@@ -89,8 +357,6 @@ speed of sound. Where the wave strikes an obstacle, some amount of the energy wi
 be absorbed, and some will be reflected back as an echo. In particular, every time
 the sound passes over a brick, a tiny amount will be reflected off the edge of the
 brick back toward the center of the labyrinth.
-
-TODO: insert visualization of echoes bouncing back.
 
 Each time the sound wave hits the edge of a brick, then, an echo is sent back to
 you. Because only a tiny portion of the wave hits the edge of a given brick, the
@@ -118,7 +384,16 @@ labyrinth. Finally, let's assume that the bricks all have the same width $$b$$. 
 sound wave in this picture is an ever-widening circle originating in the shared
 center of the labyrinth's concentric rings:
 
-TODO: diagram/animation of sound wave in 2D model.
+<div style="text-align: center;">
+<canvas id="laby2d" style="outline: 1px solid black;display: inline;" width="300" height="300"></canvas>
+<br/>
+<button onclick="if (this.isPlaying) {this.isPlaying=false;this.textContent='Play';} else {this.isPlaying=true;this.textContent='Stop';window.playLaby2d(document.getElementById('laby2d'), () => !this.isPlaying, () => {this.isPlaying=false;this.textContent='Play';});}">Play</button>
+</div>
+<script type="text/javascript">
+const resize2d = canvasResizer(document.getElementById('laby2d'), 1, 300);
+window.addEventListener('resize', resize2d, false);
+resize2d();
+</script>
 
 Now, let's label the rings of bricks $$k = 0, 1, 2, ...$$, from the inside out. Call
 the distance from the center to the first ring $$d_0$$. The distance to the second
@@ -162,7 +437,16 @@ ground (but still in the exact center of the labyrinth). For simplicity, let's
 assume that the listener's ear is at the exact same point. Here's an animation of
 the clap now:
 
-TODO: animation with side view showing sound wave and echoes
+<div style="text-align: center;">
+<canvas id="laby3d" style="outline: 1px solid black;display: inline;" height="300"></canvas>
+<br/>
+<button onclick="if (this.isPlaying) {this.isPlaying=false;this.textContent='Play';} else {this.isPlaying=true;this.textContent='Stop';window.playLaby3d(document.getElementById('laby3d'), () => !this.isPlaying, () => {this.isPlaying=false;this.textContent='Play';});}">Play</button>
+</div>
+<script type="text/javascript">
+const resize3d = canvasResizer(document.getElementById('laby3d'), 3/2, 300);
+window.addEventListener('resize', resize3d, false);
+resize3d();
+</script>
 
 Note that the echoes no longer return at a constant rate: the initial echoes are
 bunched up more than subsequent ones.
