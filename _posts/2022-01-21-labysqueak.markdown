@@ -1,6 +1,6 @@
 ---
 layout: post
-title: The Chirp at the Core
+title: Squeaking labyrinths
 mathjax: true
 ---
 
