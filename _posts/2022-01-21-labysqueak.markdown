@@ -215,6 +215,7 @@ window.playLaby2d = function playLaby2d(canvas, checkCancel, onDone) {
 	window.requestAnimationFrame(go);
 };
 
+window.BRICK_HEIGHT = 5;
 window.drawLabyrinth3d = function drawLabyrinth3d(ctx, width, height, laby) {
 	const centerX = width/2;
 	const centerY = height;
@@ -222,10 +223,9 @@ window.drawLabyrinth3d = function drawLabyrinth3d(ctx, width, height, laby) {
 	ctx.beginPath();
 	for (let k = 0; k <= laby.kmax; ++k) {
 		const dist = laby.d0 + laby.b * k;
-		const brickHeight = 10;
 		const cornerRadius = 2;
-		drawRoundRect(ctx, centerX - dist - laby.b, centerY - brickHeight, laby.b, brickHeight, cornerRadius);
-		drawRoundRect(ctx, centerX + dist, centerY - brickHeight, laby.b, brickHeight, cornerRadius);
+		drawRoundRect(ctx, centerX - dist - laby.b, centerY - window.BRICK_HEIGHT, laby.b, window.BRICK_HEIGHT, cornerRadius);
+		drawRoundRect(ctx, centerX + dist, centerY - window.BRICK_HEIGHT, laby.b, window.BRICK_HEIGHT, cornerRadius);
 	}
 	ctx.fill();
 };
@@ -247,26 +247,48 @@ window.drawClap = function drawClap(ctx, originX, originY, size, alpha) {
 window.drawSim3d = function drawSim3d(ctx, width, height, sim) {
 	ctx.clearRect(0, 0, width, height);
 
-	const centerX = width/2;
-	const centerY = height/2;
-
 	const clap_duration = 2;
 	const clap_alpha = 1 - Math.max(0, Math.min(1, sim.t/clap_duration));
 	const clap_size = sim.laby.d0/6;
-	window.drawClap(ctx, centerX, centerY, clap_size, clap_alpha);
+	window.drawClap(ctx, sim.clap.originX, sim.clap.originY, clap_size, clap_alpha);
 
 	window.drawLabyrinth3d(ctx, width, height, sim.laby);
 
 	window.drawSoundWave3d(ctx, sim.clap, 0, 2*Math.PI);
 	for (let echo of sim.echoes) {
-		const angle_start = Math.PI/2 + Math.atan2(echo.originY - centerY, echo.originX - centerX);
+		const angle_start = Math.PI/2 + Math.atan2(echo.originY - sim.clap.originY, echo.originX - sim.clap.originX);
 		const angle_end = angle_start + Math.PI;
 		window.drawSoundWave3d(ctx, echo, angle_start, angle_end);
 	}
+
+	function timeX(time) {
+		const dmax_par = sim.laby.d0 + sim.laby.b * sim.laby.kmax;
+		const dmax = Math.hypot(dmax_par, sim.laby.h);
+		const tmax = 2 * dmax / (sim.speedScale * window.SPEED_OF_SOUND);
+		const progress = time / tmax;
+		return progress * width;
+	}
+
+	ctx.beginPath();
+	for (let k = 0; k < sim.laby.kmax; ++k) {
+		const d_par = sim.laby.d0 + sim.laby.b * k;
+		const d = Math.hypot(d_par, sim.laby.h);
+		const t = 2 * d / (sim.speedScale * window.SPEED_OF_SOUND);
+		if (t > sim.t) break;
+		const x = timeX(t);
+		ctx.moveTo(x, 0);
+		ctx.lineTo(x, 10);
+	}
+	const x = timeX(sim.t);
+	ctx.moveTo(x, 0);
+	ctx.lineTo(x, 10);
+	ctx.strokeStyle = 'black';
+	ctx.stroke();
 };
 
 window.stepSim3d = function stepSim3d(sim, dt) {
-	const dmax = sim.laby.d0 + sim.laby.b * sim.laby.kmax;
+	const dmax_par = sim.laby.d0 + sim.laby.b * sim.laby.kmax;
+	const dmax = Math.sqrt(dmax_par*dmax_par + sim.laby.h*sim.laby.h);
 	const new_echoes = [];
 	for (let echo of sim.echoes) {
 		echo.dist += sim.speedScale*window.SPEED_OF_SOUND * dt;
@@ -279,22 +301,24 @@ window.stepSim3d = function stepSim3d(sim, dt) {
 	sim.clap.dist += sim.speedScale*window.SPEED_OF_SOUND * dt;
 	sim.clap.amplitude = window.amplitudeDecay(sim.clap.initialAmplitude, sim.clap.dist, dmax);
 
-	const k_old = (old_clap_dist - sim.laby.d0)/sim.laby.b;
-	const k_new = (sim.clap.dist - sim.laby.d0)/sim.laby.b;
-	const row_crossed = Math.floor(k_new);
-	if (row_crossed <= sim.laby.kmax && Math.floor(k_old) !== Math.floor(k_new)) {
-		const k_elapsed = k_new - row_crossed;
-		const d_elapsed = sim.laby.b * k_elapsed;
-		const dist = sim.laby.d0 + sim.laby.b * row_crossed;
-		const num_echoes = 10;
-		for (let i = 0; i < num_echoes; ++i) {
-			const angle = (i/num_echoes) * 2 * Math.PI
-			const x = sim.clap.originX + dist * Math.cos(angle);
-			const y = sim.clap.originY + dist * Math.sin(angle);
+	if (sim.clap.dist >= Math.hypot(sim.laby.d0, sim.laby.h)) {
+		const get_k = (dist) => (Math.sqrt(dist*dist - sim.laby.h*sim.laby.h) - sim.laby.d0) / sim.laby.b;
+		const k_old = get_k(old_clap_dist);
+		const k_new = get_k(sim.clap.dist);
+		const row_crossed = Math.floor(k_new);
+		if (row_crossed <= sim.laby.kmax && (isNaN(k_old) || Math.floor(k_old) !== Math.floor(k_new))) {
+			const dist = sim.laby.d0 + sim.laby.b * row_crossed;
 			new_echoes.push({
-				dist: d_elapsed,
-				originX: x,
-				originY: y,
+				dist: 0,
+				originX: sim.clap.originX - dist,
+				originY: sim.clap.originY + sim.laby.h,
+				initialAmplitude: sim.clap.amplitude,
+				amplitude: sim.clap.amplitude
+			});
+			new_echoes.push({
+				dist: 0,
+				originX: sim.clap.originX + dist,
+				originY: sim.clap.originY + sim.laby.h,
 				initialAmplitude: sim.clap.amplitude,
 				amplitude: sim.clap.amplitude
 			});
@@ -309,24 +333,26 @@ window.playLaby3d = function playLaby3d(canvas, checkCancel, onDone) {
 	const width = canvas.width;
 	const height = canvas.height;
 
-	const padding = 10;
-	const size = Math.min(width, height)/2 - padding;
+	const size = width/2;
 	const d0 = 0.2 * size;
-	const kmax = 4;
-	const b = (size - d0) / kmax
+	const kmax = 29;
+	const b = (size - d0) / (kmax+1)
+	const h = 1.5*d0;
 	const sim = {
-		laby: { d0: d0, b: b, kmax: kmax },
+		laby: { d0: d0, b: b, h: h, kmax: kmax },
 		speedScale: size/1000,
 		t: 0,
-		clap: {originX: width/2, originY: height/2, dist: 0, initialAmplitude: 1, amplitude: 1},
+		clap: {originX: width/2, originY: height-h-window.BRICK_HEIGHT, dist: 0, initialAmplitude: 1, amplitude: 1},
 		echoes: []
 	};
 	let prevTime = null;
+	const dmax_par = d0 + b*kmax;
+	const dmax = Math.hypot(dmax_par, h);
 	function go(currTime) {
 		if (checkCancel()) {
 			ctx.clearRect(0, 0, width, height);
 			return;
-		} else if (sim.echoes.length === 0 && sim.clap.dist > d0 + b*kmax) {
+		} else if (sim.echoes.length === 0 && sim.clap.dist > dmax) {
 			onDone();
 			return;
 		}
@@ -342,8 +368,8 @@ window.playLaby3d = function playLaby3d(canvas, checkCancel, onDone) {
 };
 </script>
 
-Recently I went to a public park that had a brick labyrinth in it. Here's a picture
-of the labyrinth taken from above:
+Recently I went to a park that had a brick labyrinth in it. The labyrinth comprised
+about 100 concentric rings of bricks. Here's a picture of it taken from above:
 
 ![Collingwood Labyrinth](/assets/images/collingwood-labyrinth.jpg)
 
@@ -424,7 +450,9 @@ $$f_\parallel \approx 1900 Hz$$, which is well within the range of human hearing
 fact, this is close to 3 octaves above middle C. Here's what the note sounds like as
 a sine wave:
 
+<div style="text-align: center;">
 <button onclick="window.togglePlay(this, (osc) => playSin(osc, 1906))">Play</button>
+</div>
 
 Now, the squeak you actually hear isn't like this. Rather than a single tone, it
 sounds more like a fast [glissando](https://wikipedia.org/wiki/glissando) from a
@@ -451,9 +479,8 @@ resize3d();
 Note that the echoes no longer return at a constant rate: the initial echoes are
 bunched up more than subsequent ones.
 
-From the animation, we can see that the distance (no longer in the ground plane) to
-the $$k^{th}$$ ring of bricks is related to the ground-level distance
-$$D_\parallel$$ by the Pythagorean Theorem:
+The distance (no longer in the ground plane) to the $$k^{th}$$ ring of bricks is
+related to the ground-level distance $$D_\parallel$$ by the Pythagorean Theorem:
 
 $$D(k) = \sqrt{D_\parallel(k)^2 + h^2}$$
 
@@ -463,10 +490,10 @@ distance to the bricks divided by the speed of sound:
 $$T(k) = \frac{2 D(k)}{c}$$
 
 Now, we could calculate the discrete difference $$T(k+1) - T(k)$$ as we did above,
-but the math works out nicer if we treat $$T(k)$$ as a continuous differentiable
-function and consider the derivative $$T'(k)$$ instead. This will only give us an
-approximate estimate of the true value, but the differences here are small enough
-that the approximation is very good.
+but the math works out nicer if we treat $$k$$ as a continuous variable and consider
+the derivative $$T'(k)$$ instead. This will only give us an approximate estimate of
+the true value, but the differences here are small enough that the approximation is
+very good.
 
 We can evaluate $$T'(k)$$ using the Chain Rule:
 
@@ -491,14 +518,17 @@ frequency, and later echoes to even out to the ground-level frequency
 $$f_\parallel$$.  The graph below shows $$F(k)$$ for $$d_0 = 1$$, $$h = 1.75$$, and
 $$b = 0.09$$.
 
+<div style="text-align: center;">
 <iframe src="https://www.desmos.com/calculator/yc6gipgr1h?embed" width="500" height="500" style="border: 1px solid #ccc" frameborder=0></iframe>
+</div>
 
 Now, if we want to listen to the squeak predicted by this model, we have to express
 the frequency in terms of time, rather than our parameter $$k$$. Fortunately,
 the only terms in the equation for $$F(k)$$ that depend on $$k$$--and therefore on
 time--are $$D(k)$$ and $$D_\parallel(k)$$, and $$D(k)$$ itself is expressed in
-terms of $$D_\parallel(k)$$. So, all we need is an expression for
-$$D_\parallel(t)$$. We could derive this by first finding an expression for $$k$$ in
+terms of $$D_\parallel(k)$$. All we need, then, is an expression for 
+$$D_\parallel(t)$$--the ground-level distance of the sound wave at a given time.
+We could derive this by first finding an expression for $$k$$ in
 terms of $$t$$, but we don't have to do that. Recall that $$D_\parallel$$ is the
 distance from the center of the labyrinth to the site of an echo. Since the echo is
 produced at the exact time the sound wave arrives at the distance $$D_\parallel$$,
@@ -519,7 +549,9 @@ distance the wave travels between echoes ($$2b$$).
 
 Here's a graph of $$F(t)$$ using the same parameters as above:
 
+<div style="text-align: center;">
 <iframe src="https://www.desmos.com/calculator/oombctnpzc?embed" width="500" height="500" style="border: 1px solid #ccc" frameborder=0></iframe>
+</div>
 
 The dotted line is at $$t_0 = 2d_0/c \approx 0.006s$$, which when the first echo
 returns. The graph ends at $$t \approx 0.06s$$, which is the time it would take
@@ -532,7 +564,9 @@ about a perfect 4th to the Bb below.
 We can get a sense for what this sounds like by modulating a sine wave to match the
 frequency profile above. Here's what that sounds like:
 
+<div style="text-align: center;">
 <button onclick="togglePlay(this, (osc) => window.playSqueak(osc))">Play</button>
+</div>
 
 This roughly matches my memory of the squeak: a short, high-pitched sound descending
 slightly in pitch. The [timbre](https://en.wikipedia.org/wiki/Timbre) is off, but that's not surprising--a clap is much
@@ -541,9 +575,9 @@ more complex than a sine wave!
 Some day I'll go back and try to record the squeak so I can check if its frequency
 profile matches this prediction.
 
-Problems with the model
+Problem with the model
 -----------------------
-There's a serious problem with this model: the amplitude of the first echo will be
+There's at least one problem with this model: the amplitude of the first echo will be
 *much* higher than that of the last echo. To see why, think about what happens when
 the clap occurs. The energy creates a pressure wave that rushes out in all
 directions. We can picture the wave as an expanding sphere. Now, the initial energy
@@ -557,15 +591,13 @@ sound increases linearly with the distance. Given that, we should expect the
 strength of the signal reflected off the $$k^{th}$$ ring of bricks, considered as a
 whole, to decrease linearly with $$k$$. Suppose the radius of the labyrinth is 10m,
 and the inner radius $$d_0$$ is 1m. Then the strength of the signal reflected by the
-last ring of bricks is 10x weaker than that reflected by the first.
+last ring of bricks is 10x weaker than that reflected by the first. In the
+visualizations above, the amplitudes of the sound waves are represented by their
+transparencies.
 
 10x isn't so bad--after all claps are quite loud--but it gets even worse. We can
 model the echo as a separate sound source that has an amplitude diminished from the
 original according to the inverse-square law. Now, that new sound source has to
 travel back to the center of the labyrinth, and **it is subject to that very same
-inverse square law**! The strength of the echo by the time it gets back to us is
-therefore inversely proportional to the square of the square of the distance--in
-other words, to the fourth power. As above, the number of bricks reflecting the
-signal increases linearly with the distance, so the strength of the echo off of a
-ring of bricks should go down as the cube of the distance. We should therefore
-expect the last echo to be 1,000x quieter than the first!
+inverse square law**! We should therefore expect the last echo to sound 100x quieter
+than the first.
