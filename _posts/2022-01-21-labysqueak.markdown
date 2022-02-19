@@ -398,10 +398,10 @@ succession.
 
 What would all these echoes sound like? One might think that it would sound like
 exactly what it is: a rapid sequence of faint clapping noises. Indeed, this is
-what it would sound like if the echoes were spaced far enough apart. If they arrive
-with a frequency above 20Hz, however, the individual claps will blend together into
-a single tone, the pitch of which will depend on the frequency with which the claps
-return.
+what it would sound like if the echoes were spaced far enough apart. However, if
+they arrive with a frequency above the lower limit of human hearing (about 20Hz),
+the individual claps will blend together into a single tone. This phenomenon is
+called [Repetition Pitch](https://en.wikipedia.org/wiki/Repetition_pitch).
 
 To calculate the frequency of return of the echoes, let's simplify the problem a bit
 by pretending that the clap occurs in the plane of the labyrinth--in other words, at
