@@ -601,3 +601,22 @@ original according to the inverse-square law. Now, that new sound source has to
 travel back to the center of the labyrinth, and **it is subject to that very same
 inverse square law**! We should therefore expect the last echo to sound 100x quieter
 than the first.
+
+Update (2023-03-05)
+-------------------
+It turns out that a team at Purdue University
+[published a paper](https://www.academia.edu/77190548/The_acoustics_of_the_clapping_circle_at_Purdue_University)
+on what they call "Clapping circles" (brick labyrinths). They develop a model very
+similar to the one described above, and find it has pretty good agreement with
+detailed measurements they took at the site. However, when they analyzed the
+spectrum of the squeak, they found that it had an unexpected harmonic structure.
+In particular, they found that the second harmonic was the strongest. The basic
+Repetition Pitch mechanism I floated above can't really account for this. A
+better theory, described in the paper, is that the bricks are acting as a
+[Diffraction Grating](https://en.wikipedia.org/wiki/Diffraction_grating). That
+is, different frequencies of the sound wave are reflected back toward the center
+at different preferred angles, due to interference of the sound as it travels
+across the bricks. They hypothesize that the reason it's the second harmonic that
+reflects back most strongly is that lower harmonics have a wavelength that is too
+large relative to the spacing between bricks for diffraction to occur--no diffraction,
+no squeak.
