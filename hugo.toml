@@ -1,0 +1,37 @@
+baseURL = "https://john.senneker.ca/"
+defaultContentLanguage = "en"
+title = "John Senneker's blog"
+
+[languages.en]
+  label = "English"
+  locale = "en-us"
+
+# Generate an RSS feed (replaces the old jekyll-feed plugin).
+[outputs]
+  home = ["HTML", "RSS"]
+
+[params]
+  email = "john@senneker.ca"
+  github_username = "jsenn"
+  linkedin = "https://www.linkedin.com/in/john-senneker/"
+
+[markup]
+  [markup.goldmark.renderer]
+    # REQUIRED for the post's custom JavaScript to survive rendering.
+    # Goldmark strips raw HTML (<script>, <canvas>, <button>, <iframe>) by
+    # default; this passes it through verbatim, the way kramdown did in Jekyll.
+    unsafe = true
+
+  # Protect math from the Markdown renderer (underscores, backslashes, braces
+  # inside $$...$$ / \(...\) would otherwise be mangled into <em>/escapes).
+  # MathJax then renders the preserved delimiters on the client.
+  [markup.goldmark.extensions.passthrough]
+    enable = true
+    [markup.goldmark.extensions.passthrough.delimiters]
+      block = [['\[', '\]'], ['$$', '$$']]
+      inline = [['\(', '\)']]
+
+# Preserve the Jekyll/minima default post URLs (/:year/:month/:day/:title)
+# so existing links to john.senneker.ca keep working.
+[permalinks]
+  posts = "/:year/:month/:day/:slug"

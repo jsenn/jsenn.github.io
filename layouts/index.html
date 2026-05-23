@@ -1,0 +1,18 @@
+{{ define "main" }}
+<div class="home">
+  {{- with .Content }}{{ . }}{{ end }}
+
+  {{- $posts := where site.RegularPages "Section" "posts" }}
+  {{- if $posts }}
+  <h2 class="post-list-heading">Posts</h2>
+  <ul class="post-list">
+    {{- range $posts }}
+    <li>
+      <span class="post-meta">{{ .Date.Format "Jan 2, 2006" }}</span>
+      <h3><a class="post-link" href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+    </li>
+    {{- end }}
+  </ul>
+  {{- end }}
+</div>
+{{ end }}

@@ -1,0 +1,18 @@
+{{ define "main" }}
+<div class="home">
+  <h1 class="page-heading">{{ .Title }}</h1>
+  {{- with .Content }}{{ . }}{{ end }}
+
+  {{- $posts := .RegularPages }}
+  {{- if $posts }}
+  <ul class="post-list">
+    {{- range $posts }}
+    <li>
+      <span class="post-meta">{{ .Date.Format "Jan 2, 2006" }}</span>
+      <h3><a class="post-link" href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+    </li>
+    {{- end }}
+  </ul>
+  {{- end }}
+</div>
+{{ end }}

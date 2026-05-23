@@ -1,0 +1,21 @@
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    {{- if .IsHome }}{{ site.Title }}
+    {{- else }}{{ .Title }} | {{ site.Title }}{{ end -}}
+  </title>
+  {{- with .Description | default site.Params.description }}
+  <meta name="description" content="{{ . }}">
+  {{- end }}
+  <link rel="stylesheet" href="{{ "css/main.css" | relURL }}">
+  {{- with .OutputFormats.Get "rss" }}
+  <link rel="alternate" type="application/rss+xml" title="{{ site.Title }}" href="{{ .Permalink }}">
+  {{- end }}
+
+  {{- /* Load MathJax only on pages that opt in with `mathjax: true`,
+         mirroring the old Jekyll `page.mathjax` behavior. */}}
+  {{- if .Params.mathjax }}
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  {{- end }}
+</head>

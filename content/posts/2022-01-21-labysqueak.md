@@ -1,7 +1,8 @@
 ---
-layout: post
-title: Squeaking labyrinths
+title: "Squeaking labyrinths"
+date: 2022-01-21
 mathjax: true
+url: "/2022/01/21/labysqueak.html"
 ---
 
 <script type="text/javascript">
@@ -406,7 +407,7 @@ called [Repetition Pitch](https://en.wikipedia.org/wiki/Repetition_pitch).
 To calculate the frequency of return of the echoes, let's simplify the problem a bit
 by pretending that the clap occurs in the plane of the labyrinth--in other words, at
 ground level. Let's also assume that the clap occurs in the exact center of the
-labyrinth. Finally, let's assume that the bricks all have the same width $$b$$. The
+labyrinth. Finally, let's assume that the bricks all have the same width \(b\). The
 sound wave in this picture is an ever-widening circle originating in the shared
 center of the labyrinth's concentric rings:
 
@@ -421,32 +422,32 @@ window.addEventListener('resize', resize2d, false);
 resize2d();
 </script>
 
-Now, let's label the rings of bricks $$k = 0, 1, 2, ...$$, from the inside out. Call
-the distance from the center to the first ring $$d_0$$. The distance to the second
-ring is $$d_0 + b$$. In general, the distance to the $$k^{th}$$ row of bricks is
+Now, let's label the rings of bricks \(k = 0, 1, 2, ...\), from the inside out. Call
+the distance from the center to the first ring \(d_0\). The distance to the second
+ring is \(d_0 + b\). In general, the distance to the \(k^{th}\) row of bricks is
 given by:
 
 $$D_\parallel(k) = d_0 + bk$$
 
-I've called this distance $$D_\parallel$$ to emphasize that this is the distance
+I've called this distance \(D_\parallel\) to emphasize that this is the distance
 in the case where the wave is travelling parallel to the ground.
 
-The time $$T_\parallel(k)$$ it takes for the $$k^{th}$$ echo to return is the time
-it takes for the sound wave to travel to the $$k^{th}$$ row of bricks and back. In
+The time \(T_\parallel(k)\) it takes for the \(k^{th}\) echo to return is the time
+it takes for the sound wave to travel to the \(k^{th}\) row of bricks and back. In
 other words, it is twice the distance to the bricks divided by
-$$c \approx 343 m/s$$, the speed of sound:
+\(c \approx 343 m/s\), the speed of sound:
 
 $$T_\parallel(k) = \frac{2 D_\parallel(k)}{c}$$
 
-The time in between echoes $$k$$ and $$k + 1$$ is given by
-$$T_\parallel(k+1) - T_\parallel(k) = \frac{2b}{c}$$. This is the time it takes for
+The time in between echoes \(k\) and \(k + 1\) is given by
+\(T_\parallel(k+1) - T_\parallel(k) = \frac{2b}{c}\). This is the time it takes for
 the sound wave to travel across a single brick and back. The inverse of this
-quantity is the number of echoes per second, or the frequency $$f_\parallel$$:
+quantity is the number of echoes per second, or the frequency \(f_\parallel\):
 
 $$f_\parallel = \frac{c}{2b}$$
 
-Now, let's estimate that the bricks are about $$9 cm$$ in size. Then
-$$f_\parallel \approx 1900 Hz$$, which is well within the range of human hearing. In
+Now, let's estimate that the bricks are about \(9 cm\) in size. Then
+\(f_\parallel \approx 1900 Hz\), which is well within the range of human hearing. In
 fact, this is close to 3 octaves above middle C. Here's what the note sounds like as
 a sine wave:
 
@@ -460,7 +461,7 @@ higher pitch to a lower one. The simple 2D model above can't account for this,
 because it predicts that the echoes all come back at the same frequency.
 
 We can recover the varying frequency by simply removing the assumption that the clap
-occurs at ground level. Let the clap now occur at some height $$h$$ above the
+occurs at ground level. Let the clap now occur at some height \(h\) above the
 ground (but still in the exact center of the labyrinth). For simplicity, let's
 assume that the listener's ear is at the exact same point. Here's an animation of
 the clap now:
@@ -479,85 +480,85 @@ resize3d();
 Note that the echoes no longer return at a constant rate: the initial echoes are
 bunched up more than subsequent ones.
 
-The distance (no longer in the ground plane) to the $$k^{th}$$ ring of bricks is
-related to the ground-level distance $$D_\parallel$$ by the Pythagorean Theorem:
+The distance (no longer in the ground plane) to the \(k^{th}\) ring of bricks is
+related to the ground-level distance \(D_\parallel\) by the Pythagorean Theorem:
 
 $$D(k) = \sqrt{D_\parallel(k)^2 + h^2}$$
 
-As before, the time $$T(k)$$ at which the $$k^{th}$$ echo returns is twice the
+As before, the time \(T(k)\) at which the \(k^{th}\) echo returns is twice the
 distance to the bricks divided by the speed of sound:
 
 $$T(k) = \frac{2 D(k)}{c}$$
 
-Now, we could calculate the discrete difference $$T(k+1) - T(k)$$ as we did above,
-but the math works out nicer if we treat $$k$$ as a continuous variable and consider
-the derivative $$T'(k)$$ instead. This will only give us an approximate estimate of
+Now, we could calculate the discrete difference \(T(k+1) - T(k)\) as we did above,
+but the math works out nicer if we treat \(k\) as a continuous variable and consider
+the derivative \(T'(k)\) instead. This will only give us an approximate estimate of
 the true value, but the differences here are small enough that the approximation is
 very good.
 
-We can evaluate $$T'(k)$$ using the Chain Rule:
+We can evaluate \(T'(k)\) using the Chain Rule:
 
 $$T'(k) = \frac{2b}{c} \frac{D_\parallel(k)}{D(k)}$$
 
 The inverse of this quantity gives us the (instantaneous) frequency of the echo
-signal after the $$k^{th}$$ echo:
+signal after the \(k^{th}\) echo:
 
 $$F(k) = \frac{c}{2b} \frac{D(k)}{D_\parallel(k)}
 = f_\parallel \frac{D(k)}{D_\parallel(k)}$$
 
 From this we see that raising the clap above the labyrinth modulates the
 ground-level frequency by the ratio of the true distance to the ground-level
-distance. Now, if $$h$$ is small compared to $$D_\parallel$$--in other words, if
+distance. Now, if \(h\) is small compared to \(D_\parallel\)--in other words, if
 the distance to the ring producing an echo is much greater than the clapper's
-height--then $$D(k) \approx D_\parallel(k)$$, so $$F(k) \approx f_\parallel$$.
-If $$D(k)$$ is about equal to $$h$$, however, $$D(k) > D_\parallel(k)$$, and the
+height--then \(D(k) \approx D_\parallel(k)\), so \(F(k) \approx f_\parallel\).
+If \(D(k)\) is about equal to \(h\), however, \(D(k) > D_\parallel(k)\), and the
 frequency will be higher than the ground-level frequency.
 
 We should therefore expect the initial echoes to be coming in at a relatively high
 frequency, and later echoes to even out to the ground-level frequency
-$$f_\parallel$$.  The graph below shows $$F(k)$$ for $$d_0 = 1$$, $$h = 1.75$$, and
-$$b = 0.09$$.
+\(f_\parallel\).  The graph below shows \(F(k)\) for \(d_0 = 1\), \(h = 1.75\), and
+\(b = 0.09\).
 
 <div style="text-align: center;">
 <iframe src="https://www.desmos.com/calculator/yc6gipgr1h?embed" width="500" height="500" style="border: 1px solid #ccc" frameborder=0></iframe>
 </div>
 
 Now, if we want to listen to the squeak predicted by this model, we have to express
-the frequency in terms of time, rather than our parameter $$k$$. Fortunately,
-the only terms in the equation for $$F(k)$$ that depend on $$k$$--and therefore on
-time--are $$D(k)$$ and $$D_\parallel(k)$$, and $$D(k)$$ itself is expressed in
-terms of $$D_\parallel(k)$$. All we need, then, is an expression for 
-$$D_\parallel(t)$$--the ground-level distance of the sound wave at a given time.
-We could derive this by first finding an expression for $$k$$ in
-terms of $$t$$, but we don't have to do that. Recall that $$D_\parallel$$ is the
+the frequency in terms of time, rather than our parameter \(k\). Fortunately,
+the only terms in the equation for \(F(k)\) that depend on \(k\)--and therefore on
+time--are \(D(k)\) and \(D_\parallel(k)\), and \(D(k)\) itself is expressed in
+terms of \(D_\parallel(k)\). All we need, then, is an expression for 
+\(D_\parallel(t)\)--the ground-level distance of the sound wave at a given time.
+We could derive this by first finding an expression for \(k\) in
+terms of \(t\), but we don't have to do that. Recall that \(D_\parallel\) is the
 distance from the center of the labyrinth to the site of an echo. Since the echo is
-produced at the exact time the sound wave arrives at the distance $$D_\parallel$$,
+produced at the exact time the sound wave arrives at the distance \(D_\parallel\),
 we have the following:
 
 $$D_\parallel(t) = ct$$
 
-In English, the ground-level distance at time $$t$$ is the speed of sound times
-$$t$$.
+In English, the ground-level distance at time \(t\) is the speed of sound times
+\(t\).
 
-Using this, we can compute $$F(t)$$:
+Using this, we can compute \(F(t)\):
 
 $$F(t) = f_\parallel \frac{D(t)}{D_\parallel(t)}
 = \frac{1}{2b} \frac{D(t)}{t}$$
 
-The second equality offers another interpretation of this formula: the frequency is the speed at which the sound wave is travelling ($$\frac{D(t)}{t}$$) divided by the
-distance the wave travels between echoes ($$2b$$).
+The second equality offers another interpretation of this formula: the frequency is the speed at which the sound wave is travelling (\(\frac{D(t)}{t}\)) divided by the
+distance the wave travels between echoes (\(2b\)).
 
-Here's a graph of $$F(t)$$ using the same parameters as above:
+Here's a graph of \(F(t)\) using the same parameters as above:
 
 <div style="text-align: center;">
 <iframe src="https://www.desmos.com/calculator/oombctnpzc?embed" width="500" height="500" style="border: 1px solid #ccc" frameborder=0></iframe>
 </div>
 
-The dotted line is at $$t_0 = 2d_0/c \approx 0.006s$$, which when the first echo
-returns. The graph ends at $$t \approx 0.06s$$, which is the time it would take
+The dotted line is at \(t_0 = 2d_0/c \approx 0.006s\), which when the first echo
+returns. The graph ends at \(t \approx 0.06s\), which is the time it would take
 for the echo to return from the 100th ring of bricks. The whole squeak lasts about
-$$0.05s$$. It starts at a frequency of about $$2500Hz$$, and ends up at around
-$$1910Hz$$, close to the asymptotic frequency. In musical terms, the squeak starts
+\(0.05s\). It starts at a frequency of about \(2500Hz\), and ends up at around
+\(1910Hz\), close to the asymptotic frequency. In musical terms, the squeak starts
 at about the Eb 3 octaves above middle C (the last Eb on a piano keyboard) and drops
 about a perfect 4th to the Bb below.
 
@@ -584,13 +585,13 @@ directions. We can picture the wave as an expanding sphere. Now, the initial ene
 of the clap is spread out over the surface of this sphere, and the area of the
 surface increases as the square of its radius. The amplitude of the sound should
 therefore decrease as the square of the distance from the sound source. Any single
-brick at distance $$d$$ from the center of the labyrinth is therefore only
-reflecting a signal with strength proportional to $$1/d^2$$ of the original sound.
+brick at distance \(d\) from the center of the labyrinth is therefore only
+reflecting a signal with strength proportional to \(1/d^2\) of the original sound.
 Now, it's not quite as bad as that, because the number of bricks reflecting the
 sound increases linearly with the distance. Given that, we should expect the
-strength of the signal reflected off the $$k^{th}$$ ring of bricks, considered as a
-whole, to decrease linearly with $$k$$. Suppose the radius of the labyrinth is 10m,
-and the inner radius $$d_0$$ is 1m. Then the strength of the signal reflected by the
+strength of the signal reflected off the \(k^{th}\) ring of bricks, considered as a
+whole, to decrease linearly with \(k\). Suppose the radius of the labyrinth is 10m,
+and the inner radius \(d_0\) is 1m. Then the strength of the signal reflected by the
 last ring of bricks is 10x weaker than that reflected by the first. In the
 visualizations above, the amplitudes of the sound waves are represented by their
 transparencies.
