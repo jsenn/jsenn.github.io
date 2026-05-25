@@ -116,6 +116,6 @@ machine BoardGame {
 }
 ```
 
-Behind the scenes, Event-V generates several **proof obligations** so that Verus will complain if our machine has any bugs. For example, if we initialized the players to square `-1`, Verus would complain that the `in_bounds` requirement in the invariant was not satisfied. Similarly, it is not possible to define an `event` that produces an invalid state. In future posts we will see some more complicated properties that Event-V enforces.
+Behind the scenes, Event-V generates several **proof obligations** so that Verus will complain if our machine has any bugs. For example, if we initialized the players to square `-1`, Verus would complain that the `in_bounds` requirement in the invariant was not satisfied. Similarly, it is not possible to define an `event` that produces an invalid state.
 
 In future posts we will refine this model by fleshing out the board representation and adding dice rolls.
