@@ -65,13 +65,7 @@ Now that we have a context object, we can define our machine. A machine can be w
 machine BoardGame {
     // The context object contains configuration that can't change over a
     // machine's lifetime.
-    context {
-        board_size: nat,
-    }
-
-    // A board with only 1 square would not be very interesting--the game
-    // would be won by everyone immediately!
-    valid: |context| context.board_size > 1
+    context: Context
 
     // The state contains variables that can be changed by events.
     state {
