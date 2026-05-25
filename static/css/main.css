@@ -78,6 +78,29 @@ img { max-width: 100%; height: auto; }
 }
 .site-footer a { color: var(--muted); }
 
+/* Code blocks: let long lines scroll horizontally instead of overflowing. */
+.highlight {
+  margin: 1em 0;
+  max-width: 100%;
+}
+.highlight pre {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin: 0;
+}
+
+/* Inline code */
+code {
+  font-size: 0.9em;
+}
+:not(pre) > code {
+  padding: 0.15em 0.35em;
+  background: var(--border);
+  border-radius: 3px;
+}
+
 /* Canvas demos in the post */
 canvas { max-width: 100%; }
 button { cursor: pointer; padding: 4px 14px; font-size: 1rem; }
