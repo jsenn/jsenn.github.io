@@ -1,6 +1,6 @@
 ---
 title: "Modeling Snakes and Ladders: Winnability"
-date: 2026-07-28
+date: 2026-05-25
 mathjax: true
 url: "/snakes-4"
 ---

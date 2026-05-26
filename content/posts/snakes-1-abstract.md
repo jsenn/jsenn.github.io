@@ -1,6 +1,6 @@
 ---
 title: "Modeling Snakes and Ladders"
-date: 2026-05-25
+date: 2026-05-22
 mathjax: true
 url: "/snakes-1"
 ---
@@ -118,4 +118,4 @@ machine BoardGame {
 
 Behind the scenes, Event-V generates several **proof obligations** so that Verus will complain if our machine has any bugs. For example, if we initialized the players to square `-1`, Verus would complain that the `in_bounds` requirement in the invariant was not satisfied. Similarly, it is not possible to define an `event` that produces an invalid state.
 
-In future posts we will refine this model by fleshing out the board representation and adding dice rolls.
+In the [next post](/snakes-2) we will flesh out the board representation.

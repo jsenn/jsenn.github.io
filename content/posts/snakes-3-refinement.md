@@ -1,6 +1,6 @@
 ---
 title: "Modeling Snakes and Ladders: Refinement"
-date: 2026-05-27
+date: 2026-05-24
 mathjax: true
 url: "/snakes-3"
 ---
@@ -105,3 +105,5 @@ In our broken code above, the simulation property does not hold, as the result o
 Similarly, if we forgot to add the `is_done` condition in the event's guard, Verus would complain that a postcondition on [`proof_strengthening`](https://github.com/jsenn/Event-V/blob/683300d87db5b9ddbb5b9431be8a24f9752575a6/src/machine.rs#L328) was violated. **Guard strengthening** is another fundamental property of refinements that Event-V forces us to satisfy. It says that the concrete guard may not be enabled in any situation in which the abstract event's guard is not.
 
 These guardrails allow us to refine our model one step at a time without introducing errors. The [Event-V source](https://github.com/jsenn/Event-V/blob/main/src/machine.rs) contains much more detail about how refinement works.
+
+In the [next post](/snakes-4), we will state and prove a theorem about the winnability of Snakes and Ladders.

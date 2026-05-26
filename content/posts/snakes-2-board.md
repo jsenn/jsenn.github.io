@@ -1,11 +1,11 @@
 ---
 title: "Modeling Snakes and Ladders: The Board"
-date: 2026-05-26
+date: 2026-05-23
 mathjax: true
 url: "/snakes-2"
 ---
 
-In the [last post](/snakes-1), we introduced [Event-V](https://github.com/jsenn/Event-V), and used it to create a very abstract model of Snakes and Ladders. The abstract model knows that the board has some number of squares, that players take turns moving around the board, and if someone lands on the final square the game is over. But the board itself was abstracted away completely. Here, we model the board.
+In the [last post](/snakes-1), we introduced [Event-V](https://github.com/jsenn/Event-V), and used it to create an abstract model of Snakes and Ladders. The model knows that the board has some number of squares, that players take turns moving around the board, and if someone lands on the final square the game is over, but the board itself was abstracted away completely. Here, we model the board.
 
 Recall that a Snakes and Ladders board is a sequence of squares. On some squares there is the base of a ladder. Players on that square can climb the ladder to go further along the board. Other squares have the head of a snake on them; when a player lands on one of those, they slide down the snakes back to an earlier square.
 
@@ -166,3 +166,5 @@ proof fn proof_board_valid() {
 Note that a `proof`-mode function is used here so we can use Verus's `assert` statement.
 
 If we remove the forward-progress invariant, and instead rely on the recursive winnability property, Verus is unable to prove that this board is valid by itself.
+
+In the [next post](/snakes-3), we will use our `Board` type to refine the abstract `BoardGame` model from part one into a full model of Snakes and Ladders.
