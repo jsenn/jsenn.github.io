@@ -5,9 +5,9 @@ mathjax: true
 url: "/snakes-2"
 ---
 
-In the [last post](/snakes-1), we introduced [Event-V](https://github.com/jsenn/Event-V), and used it to create an abstract model of Snakes and Ladders. The model knows that the board has some number of squares, that players take turns moving around the board, and if someone lands on the final square the game is over, but the board itself was abstracted away completely. Here, we model the board.
+In the [last post](/snakes-1), we introduced [Verus](https://github.com/verus-lang/verus) and used it to create an abstract formal model of Snakes and Ladders. The model knows that the board has some number of squares, that players take turns moving around the board, and if someone lands on the final square the game is over, but the board itself was abstracted away completely. Here, we model the board.
 
-Recall that a Snakes and Ladders board is a sequence of squares. On some squares there is the base of a ladder. Players on that square can climb the ladder to go further along the board. Other squares have the head of a snake on them; when a player lands on one of those, they slide down the snakes back to an earlier square.
+Recall that a Snakes and Ladders board is a sequence of squares. On some squares there is the base of a ladder. Players on that square can climb the ladder to go further along the board. Other squares have the head of a snake on them; when a player lands on one of those, they slide down the snake's back to an earlier square.
 
 {{< figure
     src="/assets/images/snakes-board.jpg"
@@ -30,7 +30,7 @@ A square that sits at the base of a ladder will have a positive value; one that 
 
 For example, the board `[0, 0, 0]` has no snakes or ladders. The board `[0, 1, 0]` has a ladder in the second square, so if you land on it you immediately move forward to the final square and win the game. Conversely, the board `[0, -1, 0]` has a snake in the second square; if you land on it you get sent back one square to the start.
 
-A few helpers will make properties easier to state. Note that a few of them use a `DiceRoll` type, which is an enum with a case for each face on a six-sided die.
+A few helpers will make properties easier to state. Note that `DiceRoll` is an enum with a case for each face on a six-sided die.
 
 ```rust
 impl Board {
